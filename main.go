@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
@@ -45,7 +46,25 @@ func getStudents(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func addStudents(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "ADD REQUEST")
+	db = getMySQLDB()
+	defer db.Close()
+	s := studentInfo{}
+	json.NewDecoder(r.Body).Decode(&s)
+	sid, _ := strconv.Atoi(s.Sid)
+	query := "insert into studentinfo(sid, name, course) values (?, ?, ?)"
+	res, err := db.Exec(query, sid, s.Name, s.Course)
+	if err != nil {
+		fmt.Fprintf(w, ""+err.Error())
+	} else {
+		_, err = res.LastInsertId()
+		if err != nil {
+			json.NewEncoder(w).Encode("{error: Record not inserted}")
+		} else {
+			// json.NewEncoder(w).Encode(s)
+			json.NewEncoder(w).Encode("Ok")
+		}
+	}
+	// fmt.Fprintf(w, "ADD REQUEST")
 }
 func updateStudents(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "UPDATE REQUEST")
