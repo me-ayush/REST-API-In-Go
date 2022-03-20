@@ -67,7 +67,25 @@ func addStudents(w http.ResponseWriter, r *http.Request) {
 	// fmt.Fprintf(w, "ADD REQUEST")
 }
 func updateStudents(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "UPDATE REQUEST")
+	db = getMySQLDB()
+	defer db.Close()
+	s := studentInfo{}
+	json.NewDecoder(r.Body).Decode(&s)
+	vars := mux.Vars(r)
+	sid, _ := strconv.Atoi(vars["sid"])
+	query := "update studentinfo set name=?, course=? where sid=?"
+	res, err := db.Exec(query, s.Name, s.Course, sid)
+	if err != nil {
+		fmt.Fprintf(w, ""+err.Error())
+	} else {
+		_, err = res.RowsAffected()
+		if err != nil {
+			json.NewEncoder(w).Encode("{error: someting went wrong}")
+		} else {
+			json.NewEncoder(w).Encode("ok")
+		}
+	}
+	// fmt.Fprintf(w, "UPDATE REQUEST")
 }
 func deleteStudents(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "DELETE REQUEST")
