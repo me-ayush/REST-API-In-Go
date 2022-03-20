@@ -88,7 +88,23 @@ func updateStudents(w http.ResponseWriter, r *http.Request) {
 	// fmt.Fprintf(w, "UPDATE REQUEST")
 }
 func deleteStudents(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "DELETE REQUEST")
+	db = getMySQLDB()
+	defer db.Close()
+	vars := mux.Vars(r)
+	sid, _ := strconv.Atoi(vars["sid"])
+	query := "delete from studentinfo  where sid=?"
+	res, err := db.Exec(query, sid)
+	if err != nil {
+		fmt.Fprintf(w, ""+err.Error())
+	} else {
+		_, err = res.RowsAffected()
+		if err != nil {
+			json.NewEncoder(w).Encode("{error: someting went wrong}")
+		} else {
+			json.NewEncoder(w).Encode("ok")
+		}
+	}
+	// fmt.Fprintf(w, "DELETE REQUEST")
 }
 
 func main() {
@@ -96,6 +112,6 @@ func main() {
 	r.HandleFunc("/students", getStudents).Methods("GET")
 	r.HandleFunc("/students", addStudents).Methods("POST")
 	r.HandleFunc("/students/{sid}", updateStudents).Methods("PUT")
-	r.HandleFunc("/students/{sid}", deleteStudents).Methods("DELTE")
+	r.HandleFunc("/students/{sid}", deleteStudents).Methods("DELETE")
 	http.ListenAndServe(":3000", r)
 }
